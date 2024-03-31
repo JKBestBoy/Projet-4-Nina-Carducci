@@ -1,34 +1,45 @@
+// Définition du plugin jQuery "mauGallery" sur l'objet jQuery avec des méthodes pour créer un wrapper de ligne (grid), une lightbox (modale), et des listeners pour la galerie d'images.
 (function($) {
   $.fn.mauGallery = function(options) {
+    // Fusion des options par défaut du plugin avec celles fournies par l'utilisateur.
     var options = $.extend($.fn.mauGallery.defaults, options);
-    var tagsCollection = [];
+    var tagsCollection = []; // Collection pour stocker les tags uniques.
+
+    // Application du plugin à chaque élément sélectionné.
     return this.each(function() {
-      $.fn.mauGallery.methods.createRowWrapper($(this));
+      // Initialisation de la galerie : création de la structure, lightbox et écouteurs d'événements.
+      $.fn.mauGallery.methods.createRowWrapper($(this)); // Crée un wrapper pour les éléments de la galerie.
       if (options.lightBox) {
+        // Si l'option lightBox est activée, initialise la lightbox.
         $.fn.mauGallery.methods.createLightBox(
           $(this),
           options.lightboxId,
           options.navigation
         );
       }
-      $.fn.mauGallery.listeners(options);
-
+      $.fn.mauGallery.listeners(options); // Initialise les écouteurs d'événements.
+      
+      // Traitement de chaque item de la galerie.
       $(this)
         .children(".gallery-item")
         .each(function(index) {
+          // Applique des ajustements pour la responsivité et le placement des items.
           $.fn.mauGallery.methods.responsiveImageItem($(this));
           $.fn.mauGallery.methods.moveItemInRowWrapper($(this));
           $.fn.mauGallery.methods.wrapItemInColumn($(this), options.columns);
+
+          // Gestion des tags pour le filtrage des items.
           var theTag = $(this).data("gallery-tag");
           if (
             options.showTags &&
             theTag !== undefined &&
             tagsCollection.indexOf(theTag) === -1
           ) {
-            tagsCollection.push(theTag);
+            tagsCollection.push(theTag); // Ajoute le tag à la collection s'il est unique.
           }
         });
 
+      // Affichage des tags pour le filtrage si l'option est activée.
       if (options.showTags) {
         $.fn.mauGallery.methods.showItemTags(
           $(this),
@@ -37,9 +48,11 @@
         );
       }
 
-      $(this).fadeIn(500);
+      $(this).fadeIn(500); // Effet de fondu pour l'apparition de la galerie.
     });
   };
+
+  // Options par défaut du plugin.
   $.fn.mauGallery.defaults = {
     columns: 3,
     lightBox: true,
@@ -48,8 +61,12 @@
     tagsPosition: "bottom",
     navigation: true
   };
+
+  // Fonctions utilitaires et gestionnaires d'événements du plugin.
   $.fn.mauGallery.listeners = function(options) {
+    // Gestionnaire d'événements pour les clics sur les items de la galerie.
     $(".gallery-item").on("click", function() {
+      // Ouvre la lightbox si l'option est activée et si l'élément cliqué est une image.
       if (options.lightBox && $(this).prop("tagName") === "IMG") {
         $.fn.mauGallery.methods.openLightBox($(this), options.lightboxId);
       } else {
@@ -57,7 +74,10 @@
       }
     });
 
+    // Gestionnaire d'événements pour le filtrage par tags.
     $(".gallery").on("click", ".nav-link", $.fn.mauGallery.methods.filterByTag);
+
+    // Gestionnaires d'événements pour naviguer entre les images dans la lightbox.
     $(".gallery").on("click", ".mg-prev", () =>
       $.fn.mauGallery.methods.prevImage(options.lightboxId)
     );
@@ -65,7 +85,9 @@
       $.fn.mauGallery.methods.nextImage(options.lightboxId)
     );
   };
+
   $.fn.mauGallery.methods = {
+  // Crée un wrapper '.gallery-items-row' si celui-ci n'existe pas déjà.
     createRowWrapper(element) {
       if (
         !element
@@ -76,7 +98,9 @@
         element.append('<div class="gallery-items-row row"></div>');
       }
     },
+    // Enveloppe les items de la galerie dans des colonnes en fonction du nombre de colonnes spécifié.
     wrapItemInColumn(element, columns) {
+      // Logique pour déterminer les classes de colonne en fonction du nombre spécifié.
       if (columns.constructor === Number) {
         element.wrap(
           `<div class='item-column mb-4 col-${Math.ceil(12 / columns)}'></div>`
@@ -105,21 +129,26 @@
         );
       }
     },
+    // Déplace les items de la galerie dans le wrapper '.gallery-items-row'.
     moveItemInRowWrapper(element) {
       element.appendTo(".gallery-items-row");
     },
+    // Ajoute la classe 'img-fluid' aux images pour les rendre responsives.
     responsiveImageItem(element) {
       if (element.prop("tagName") === "IMG") {
         element.addClass("img-fluid");
       }
     },
+    // Ouvre la lightbox et affiche l'image sélectionnée.
     openLightBox(element, lightboxId) {
       $(`#${lightboxId}`)
         .find(".lightboxImage")
         .attr("src", element.attr("src"));
       $(`#${lightboxId}`).modal("toggle");
     },
+    // Logique pour naviguer à l'image précédente dans la lightbox.
     prevImage() {
+      // Trouve l'image active, détermine l'image précédente et la montre.
       let activeImage = null;
       $("img.gallery-item").each(function() {
         if ($(this).attr("src") === $(".lightboxImage").attr("src")) {
@@ -158,7 +187,9 @@
         imagesCollection[imagesCollection.length - 1];
       $(".lightboxImage").attr("src", $(next).attr("src"));
     },
+    // Logique pour naviguer à l'image suivante dans la lightbox.
     nextImage() {
+      // Trouve l'image active, détermine l'image suivante et la montre.
       let activeImage = null;
       $("img.gallery-item").each(function() {
         if ($(this).attr("src") === $(".lightboxImage").attr("src")) {
@@ -195,7 +226,9 @@
       next = imagesCollection[index] || imagesCollection[0];
       $(".lightboxImage").attr("src", $(next).attr("src"));
     },
+    // Crée la lightbox si l'option lightBox est activée.
     createLightBox(gallery, lightboxId, navigation) {
+      // Construction de la structure HTML de la lightbox et insertion dans le DOM.
       gallery.append(`<div class="modal fade" id="${
         lightboxId ? lightboxId : "galleryLightbox"
       }" tabindex="-1" role="dialog" aria-hidden="true">
@@ -218,7 +251,9 @@
                 </div>
             </div>`);
     },
+    // Affiche les tags pour le filtrage des items de la galerie si l'option showTags est activée.
     showItemTags(gallery, position, tags) {
+      // Construction des éléments de tags et insertion dans le DOM à la position spécifiée.
       var tagItems =
         '<li class="nav-item"><span class="nav-link active active-tag"  data-images-toggle="all">Tous</span></li>';
       $.each(tags, function(index, value) {
@@ -235,7 +270,9 @@
         console.error(`Unknown tags position: ${position}`);
       }
     },
+    // Filtrage des items de la galerie en fonction du tag sélectionné.
     filterByTag() {
+      // Logique pour cacher/montrer les items de la galerie en fonction du tag.
       if ($(this).hasClass("active-tag")) {
         return;
       }
