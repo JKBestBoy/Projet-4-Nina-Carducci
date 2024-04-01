@@ -148,83 +148,44 @@
     },
     // Logique pour naviguer à l'image précédente dans la lightbox.
     prevImage() {
-      // Trouve l'image active, détermine l'image précédente et la montre.
-      let activeImage = null;
-      $("img.gallery-item").each(function() {
-        if ($(this).attr("src") === $(".lightboxImage").attr("src")) {
-          activeImage = $(this);
-        }
-      });
-      let activeTag = $(".tags-bar span.active-tag").data("images-toggle");
-      let imagesCollection = [];
-      if (activeTag === "all") {
-        $(".item-column").each(function() {
-          if ($(this).children("img").length) {
-            imagesCollection.push($(this).children("img"));
-          }
-        });
-      } else {
-        $(".item-column").each(function() {
-          if (
-            $(this)
-              .children("img")
-              .data("gallery-tag") === activeTag
-          ) {
-            imagesCollection.push($(this).children("img"));
-          }
-        });
+      let currentSrc = $(".lightboxImage").attr("src"); // Obtient l'URL de l'image actuelle dans la lightbox.
+      let images = $(".item-column img"); // Sélectionne toutes les images de la galerie.
+      let activeIndex = images.map(function() { return $(this).attr("src"); }).get().indexOf(currentSrc);
+    
+      let prevIndex = activeIndex - 1;
+      if (prevIndex < 0) {
+        prevIndex = images.length - 1; // Boucle vers la dernière image si nécessaire.
       }
-      let index = 0,
-        next = null;
-
-      $(imagesCollection).each(function(i) {
-        if ($(activeImage).attr("src") === $(this).attr("src")) {
-          index = i ;
-        }
-      });
-      next =
-        imagesCollection[index] ||
-        imagesCollection[imagesCollection.length - 1];
-      $(".lightboxImage").attr("src", $(next).attr("src"));
+    
+      let prevImageSrc = $(images[prevIndex]).attr("src");
+      $(".lightboxImage").attr("src", prevImageSrc); // Met à jour l'attribut 'src' de la lightbox avec l'URL de l'image précédente.
     },
     // Logique pour naviguer à l'image suivante dans la lightbox.
     nextImage() {
-      // Trouve l'image active, détermine l'image suivante et la montre.
-      let activeImage = null;
-      $("img.gallery-item").each(function() {
-        if ($(this).attr("src") === $(".lightboxImage").attr("src")) {
-          activeImage = $(this);
-        }
-      });
-      let activeTag = $(".tags-bar span.active-tag").data("images-toggle");
-      let imagesCollection = [];
-      if (activeTag === "all") {
-        $(".item-column").each(function() {
-          if ($(this).children("img").length) {
-            imagesCollection.push($(this).children("img"));
-          }
-        });
-      } else {
-        $(".item-column").each(function() {
-          if (
-            $(this)
-              .children("img")
-              .data("gallery-tag") === activeTag
-          ) {
-            imagesCollection.push($(this).children("img"));
-          }
-        });
+      // Récupère toutes les images de la galerie.
+      let images = $(".item-column img");
+      
+      // Trouve l'URL de l'image actuellement affichée dans la lightbox.
+      let currentSrc = $(".lightboxImage").attr("src");
+      
+      // Crée un tableau des sources d'images pour trouver facilement l'index.
+      let imagesSrc = images.map(function() { return $(this).attr("src"); }).get();
+      
+      // Trouve l'index de l'image actuelle dans la galerie.
+      let activeIndex = imagesSrc.indexOf(currentSrc);
+      
+      // Calcule l'index de l'image suivante.
+      let nextIndex = activeIndex + 1;
+      if (nextIndex >= images.length) {
+        // Si l'index dépasse le nombre d'images, revient à la première image.
+        nextIndex = 0;
       }
-      let index = 0,
-        next = null;
-
-      $(imagesCollection).each(function(i) {
-        if ($(activeImage).attr("src") === $(this).attr("src")) {
-          index = i;
-        }
-      });
-      next = imagesCollection[index] || imagesCollection[0];
-      $(".lightboxImage").attr("src", $(next).attr("src"));
+    
+      // Récupère la source de l'image suivante.
+      let nextImageSrc = imagesSrc[nextIndex];
+      
+      // Met à jour l'attribut 'src' de la lightbox avec l'URL de l'image suivante.
+      $(".lightboxImage").attr("src", nextImageSrc);
     },
     // Crée la lightbox si l'option lightBox est activée.
     createLightBox(gallery, lightboxId, navigation) {
